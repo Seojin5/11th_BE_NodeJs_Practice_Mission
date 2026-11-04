@@ -4,7 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types.js';
 import { AppModule } from './../src/app.module.js';
 
-describe('AppController (e2e)', () => {
+describe('MemberController (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
@@ -16,11 +16,13 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/members/nickname/:nickname (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/members/nickname/mission-probe')
       .expect(200)
-      .expect('Hello World!');
+      .expect((response) => {
+        expect(typeof response.body.available).toBe('boolean');
+      });
   });
 
   afterEach(async () => {
