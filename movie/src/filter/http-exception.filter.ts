@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, HttpException, HttpStatus, Logger } from '@nestjs
 import type { ExceptionFilter } from '@nestjs/common';
 import type { Response } from 'express';
 import { QueryFailedError } from 'typeorm';
+import { ApiException } from '../exception/api.exception.js';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -15,7 +16,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const body = exception.getResponse();
-      if (typeof body === 'object' && 'code' in body && typeof body.code === 'string') code = body.code;
+      if (exception instanceof ApiException) {
+        code = exception.code;
+      } else if (typeof body === 'object' && 'code' in body && typeof body.code === 'string') {
+        code = body.code;
+      }
       const detail = typeof body === 'string' ? body : (body as {message?: string | string[]}).message;
       message = Array.isArray(detail) ? detail[0] : detail ?? exception.message;
     } else if (exception instanceof QueryFailedError && exception.driverError.code === 'ER_DUP_ENTRY') {
