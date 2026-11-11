@@ -1,9 +1,11 @@
-import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Member } from "../entity/member.entity.js";
 import { CheckResponseDto } from "../dto/check-response.dto.js";
 import { CreateMemberDto } from "../dto/create-member.dto.js";
+import { MemberInfoResponseDto } from "../dto/member-info-response.dto.js";
+import { ApiException } from "../exception/api.exception.js";
 import * as bcrypt from "bcrypt";
 
 @Injectable()
@@ -23,6 +25,20 @@ export class MemberService {
   async checkEmail(email: string): Promise<CheckResponseDto> {
     const exists = await this.memberRepository.exists({ where: { email } });
     return { available: !exists };
+  }
+
+  async getMyInfo(memberId: number): Promise<MemberInfoResponseDto> {
+    const member = await this.memberRepository.findOneBy({ memberId });
+
+    if (!member) {
+      throw new ApiException(
+        HttpStatus.NOT_FOUND,
+        "MEMBER404_1",
+        "해당 회원을 찾을 수 없습니다.",
+      );
+    }
+
+    return MemberInfoResponseDto.from(member);
   }
 
   async signUp(dto: CreateMemberDto) {
