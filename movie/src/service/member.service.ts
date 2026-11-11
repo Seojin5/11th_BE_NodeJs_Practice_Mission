@@ -1,10 +1,11 @@
 import { BadRequestException, ConflictException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Not, QueryFailedError, Repository } from "typeorm";
 import { Member } from "../entity/member.entity.js";
 import { CheckResponseDto } from "../dto/check-response.dto.js";
 import { CreateMemberDto } from "../dto/create-member.dto.js";
 import { MemberInfoResponseDto } from "../dto/member-info-response.dto.js";
+import type { MemberUpdateRequestDto } from "../dto/member-update-request.dto.js";
 import { ApiException } from "../exception/api.exception.js";
 import * as bcrypt from "bcrypt";
 
@@ -28,6 +29,47 @@ export class MemberService {
   }
 
   async getMyInfo(memberId: number): Promise<MemberInfoResponseDto> {
+    return MemberInfoResponseDto.from(await this.findMember(memberId));
+  }
+
+  async updateMyInfo(
+    memberId: number,
+    dto: MemberUpdateRequestDto,
+  ): Promise<MemberInfoResponseDto> {
+    const member = await this.findMember(memberId);
+    const duplicated = await this.memberRepository.exists({
+      where: { nickname: dto.nickname, memberId: Not(memberId) },
+    });
+
+    if (duplicated) {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        "MEMBER409_1",
+        "이미 사용 중인 닉네임입니다.",
+      );
+    }
+
+    if (member.nickname === dto.nickname) {
+      return MemberInfoResponseDto.from(member);
+    }
+
+    member.nickname = dto.nickname;
+    try {
+      const saved = await this.memberRepository.save(member);
+      return MemberInfoResponseDto.from(saved);
+    } catch (error) {
+      if (error instanceof QueryFailedError && error.driverError.code === "ER_DUP_ENTRY") {
+        throw new ApiException(
+          HttpStatus.CONFLICT,
+          "MEMBER409_1",
+          "이미 사용 중인 닉네임입니다.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  private async findMember(memberId: number): Promise<Member> {
     const member = await this.memberRepository.findOneBy({ memberId });
 
     if (!member) {
@@ -38,7 +80,7 @@ export class MemberService {
       );
     }
 
-    return MemberInfoResponseDto.from(member);
+    return member;
   }
 
   async signUp(dto: CreateMemberDto) {
