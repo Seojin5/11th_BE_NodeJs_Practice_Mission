@@ -33,12 +33,32 @@ import { RatingService } from './service/rating.service.js';
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: Number(configService.get<string>('JWT_ACCESS_EXPIRATION') ?? 3600),
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret?.trim()) {
+          throw new Error(
+            'JWT_SECRET에 비어 있지 않은 서명 키를 설정해야 합니다.',
+          );
+        }
+
+        const configuredExpiration = configService.get<string>(
+          'JWT_ACCESS_EXPIRATION',
+        );
+        const expiresIn =
+          configuredExpiration === undefined
+            ? 3600
+            : Number(configuredExpiration);
+        if (
+          (configuredExpiration !== undefined &&
+            !/^[0-9]+$/.test(configuredExpiration.trim())) ||
+          !Number.isSafeInteger(expiresIn) ||
+          expiresIn < 1
+        ) {
+          throw new Error('JWT_ACCESS_EXPIRATION은 양의 정수(초)여야 합니다.');
+        }
+
+        return { secret, signOptions: { expiresIn } };
+      },
     }),
   ],
   controllers: [
