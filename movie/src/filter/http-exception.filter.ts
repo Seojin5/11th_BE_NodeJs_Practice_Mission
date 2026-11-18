@@ -32,6 +32,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         if (key === 'nickname') { code = 'MEMBER4092'; message = '이미 사용 중인 닉네임입니다.'; }
       } else if (/INSERT INTO .?rating.?\s*\(/i.test(exception.query) && key === 'uk_rating_member_movie') {
         code = 'RATING409_1'; message = '이미 이 영화에 평점을 남기셨습니다.';
+      } else if (key === 'uk_favorite_member_movie') {
+        code = 'FAVORITE409_1';
+        message = '이미 이 영화를 즐겨찾기하셨습니다.';
       }
     } else {
       this.logger.error('처리되지 않은 서버 오류가 발생했습니다.');
