@@ -7,8 +7,8 @@ export class FavoriteResponseDto {
 
   static from(favorite: Favorite): FavoriteResponseDto {
     return {
-      favoriteId: favorite.favoriteId,
-      movieId: favorite.movieId,
+      favoriteId: Number(favorite.favoriteId),
+      movieId: Number(favorite.movieId),
       createdAt: favorite.createdAt,
     };
   }
