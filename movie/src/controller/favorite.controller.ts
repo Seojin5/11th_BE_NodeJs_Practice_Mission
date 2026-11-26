@@ -11,19 +11,26 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiAuthRequired } from '../swagger/api-auth-required.decorator.js';
 import type { Request } from 'express';
 import { CreateFavoriteDto } from '../dto/create-favorite.dto.js';
 import { ApiException } from '../exception/api.exception.js';
 import { AuthGuard } from '../guard/auth.guard.js';
 import { FavoriteService } from '../service/favorite.service.js';
 
+@ApiTags('즐겨찾기')
+@ApiAuthRequired()
 @Controller('favorites')
-@ApiBearerAuth('bearerAuth')
 @UseGuards(AuthGuard)
 export class FavoriteController {
   constructor(private readonly favoriteService: FavoriteService) {}
 
+  @ApiOperation({ summary: '영화를 즐겨찾기에 등록합니다 · 토큰 필요' })
+  @ApiResponse({ status: 201, description: 'COMMON201 · 즐겨찾기 등록 성공' })
+  @ApiResponse({ status: 400, description: 'COMMON400 · 요청 값이 올바르지 않습니다.' })
+  @ApiResponse({ status: 404, description: 'MEMBER404_1 · 해당 회원을 찾을 수 없습니다.' })
+  @ApiResponse({ status: 409, description: 'FAVORITE409_1 · 같은 영화를 이미 즐겨찾기했습니다.' })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Req() request: Request & { memberId?: number }, @Body() dto: CreateFavoriteDto) {
@@ -38,6 +45,8 @@ export class FavoriteController {
     };
   }
 
+  @ApiOperation({ summary: '내 즐겨찾기 목록을 조회합니다 · 토큰 필요' })
+  @ApiResponse({ status: 200, description: 'COMMON200 · 즐겨찾기 목록 조회 성공' })
   @Get()
   @HttpCode(HttpStatus.OK)
   async getMyFavorites(@Req() request: Request & { memberId?: number }) {
@@ -52,6 +61,9 @@ export class FavoriteController {
     };
   }
 
+  @ApiOperation({ summary: '이 영화의 즐겨찾기 여부를 조회합니다 · 토큰 필요' })
+  @ApiResponse({ status: 200, description: 'COMMON200 · 미등록 상태는 isFavorite: false' })
+  @ApiResponse({ status: 400, description: 'COMMON400 · 요청 값이 올바르지 않습니다.' })
   @Get(':movieId')
   @HttpCode(HttpStatus.OK)
   async getStatus(
@@ -69,6 +81,10 @@ export class FavoriteController {
     };
   }
 
+  @ApiOperation({ summary: '영화를 내 즐겨찾기에서 해제합니다 · 토큰 필요' })
+  @ApiResponse({ status: 200, description: 'COMMON200 · 즐겨찾기 해제 성공' })
+  @ApiResponse({ status: 400, description: 'COMMON400 · 요청 값이 올바르지 않습니다.' })
+  @ApiResponse({ status: 404, description: 'FAVORITE404_1 · 해제할 즐겨찾기가 없습니다.' })
   @Delete(':movieId')
   @HttpCode(HttpStatus.OK)
   async delete(

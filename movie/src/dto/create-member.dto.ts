@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
@@ -5,12 +6,14 @@ export class CreateMemberDto {
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
   @MaxLength(254)
   @IsEmail({}, { message: '올바른 이메일 형식이 아닙니다.' })
+  @ApiProperty({ format: 'email', example: 'movie-example@example.com' })
   email: string;
 
   @IsString()
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/, {
     message: '비밀번호는 대문자/소문자/숫자/특수문자를 포함한 8자 이상이어야 합니다.',
   })
+  @ApiProperty({ format: 'password', example: 'Swagger9!Test' })
   password: string;
 
   @IsString()
@@ -18,5 +21,6 @@ export class CreateMemberDto {
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
   @MinLength(2, { message: '닉네임은 2자 이상이어야 합니다.' })
   @MaxLength(12, { message: '닉네임은 12자 이하여야 합니다.' })
+  @ApiProperty({ minLength: 2, maxLength: 12, example: '영화친구' })
   nickname: string;
 }

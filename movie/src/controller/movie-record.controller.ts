@@ -7,17 +7,26 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiAuthRequired } from '../swagger/api-auth-required.decorator.js';
 import type { Request } from 'express';
 import { CreateMovieRecordDto } from '../dto/create-movie-record.dto.js';
 import { ApiException } from '../exception/api.exception.js';
 import { AuthGuard } from '../guard/auth.guard.js';
 import { MovieRecordService } from '../service/movie-record.service.js';
 
+@ApiTags('영화 기록')
+@ApiAuthRequired()
 @Controller('movie-records')
 @UseGuards(AuthGuard)
 export class MovieRecordController {
   constructor(private readonly movieRecordService: MovieRecordService) {}
 
+  @ApiOperation({ summary: '평점과 선택한 즐겨찾기를 한 번에 저장합니다 · 토큰 필요' })
+  @ApiResponse({ status: 201, description: 'COMMON201 · 영화 기록 저장 성공' })
+  @ApiResponse({ status: 400, description: 'COMMON400 · 요청 값이 올바르지 않습니다.' })
+  @ApiResponse({ status: 404, description: 'MEMBER404_1 · 해당 회원을 찾을 수 없습니다.' })
+  @ApiResponse({ status: 409, description: 'RATING409_1 · 중복 평점 / FAVORITE409_1 · 중복 즐겨찾기' })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
