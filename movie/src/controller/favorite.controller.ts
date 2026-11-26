@@ -11,6 +11,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { CreateFavoriteDto } from '../dto/create-favorite.dto.js';
 import { ApiException } from '../exception/api.exception.js';
@@ -18,6 +19,7 @@ import { AuthGuard } from '../guard/auth.guard.js';
 import { FavoriteService } from '../service/favorite.service.js';
 
 @Controller('favorites')
+@ApiBearerAuth('bearerAuth')
 @UseGuards(AuthGuard)
 export class FavoriteController {
   constructor(private readonly favoriteService: FavoriteService) {}
